@@ -168,8 +168,8 @@ client.once('ready', async () => {
       return;
     }
 
-    const msg1 = await channel.send({ content: ${statusEmoji} ${serverStatus.name} (${serverStatus.status}) });
-    const msg2 = await channel.send({ content: ${statusEmoji} ${serverStatus.name} (${serverStatus.status}) });
+    const msg1 = await channel.send({ content: '${statusEmoji} ${server1Status.name} (${server1Status.status})' });
+    const msg2 = await channel.send({ content: '${statusEmoji} ${server1Status.name} (${server1Status.status})' });
 
     // Update every X seconds
     setInterval(() => updateEmbed(msg1, msg2), parseInt(UPDATE_INTERVAL) * 1000);
