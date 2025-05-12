@@ -1,64 +1,68 @@
-// index.js
-require('dotenv').config();
-const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
-const axios = require('axios');
-const http = require('http');
-
-// Create a simple HTTP server to handle Render's health checks
-const PORT = process.env.PORT || 3001;
-const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/plain');
-  res.end('Discord Bot is running!');
-});
-
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-
-const {
-  DISCORD_TOKEN,
-  DISCORD_CHANNEL_ID,
-  PTERO_API_KEY,
-  PTERO_PANEL_URL,
-  SERVER_ID_1,
-  SERVER_ID_2,
-  UPDATE_INTERVAL
-} = process.env;
-
-const headers = {
-  Authorization: `Bearer ${PTERO_API_KEY}`,
+// Configuration for Pterodactyl Client API
+const PTERO_CLIENT_API_HEADERS = {
+  'Authorization': `Bearer ${PTERO_API_KEY}`,
   'Content-Type': 'application/json',
-  Accept: 'application/json',
+  'Accept': 'application/json',
 };
 
-async function getServerStats(serverId) {
+async function getServerStatus(serverId) {
   try {
-    const response = await axios.get(
-      `${PTERO_PANEL_URL}/api/application/servers/${serverId}/resources`,
-      { headers }
+    // Fetch server status and resources
+    const serverResponse = await axios.get(
+      `${PTERO_PANEL_URL}/api/client/servers/${serverId}`, 
+      { headers: PTERO_CLIENT_API_HEADERS }
     );
-    const data = response.data.attributes;
+
+    const resourcesResponse = await axios.get(
+      `${PTERO_PANEL_URL}/api/client/servers/${serverId}/resources`, 
+      { headers: PTERO_CLIENT_API_HEADERS }
+    );
+
+    const serverDetails = serverResponse.data.attributes;
+    const resources = resourcesResponse.data.attributes;
+
     return {
-      name: data.name,
-      cpu: data.resources.cpu_absolute,
-      memory: `${(data.resources.memory_bytes / 1024 / 1024).toFixed(2)} MB`,
-      disk: `${(data.resources.disk_bytes / 1024 / 1024).toFixed(2)} MB`,
-      uptime: `${Math.floor(data.resources.uptime / 1000)}s`,
-      state: data.current_state,
+      name: serverDetails.name,
+      identifier: serverDetails.identifier,
+      // Server state
+      status: serverDetails.status ? 'Online' : 'Offline',
+      
+      // Resource details
+      cpu: {
+        usage: resources.resources.cpu_absolute !== null 
+          ? `${resources.resources.cpu_absolute.toFixed(2)}%` 
+          : 'N/A',
+      },
+      memory: {
+        current: `${(resources.resources.memory_bytes / 1024 / 1024).toFixed(2)} MB`,
+        limit: `${(resources.resources.memory_limit_bytes / 1024 / 1024).toFixed(2)} MB`,
+      },
+      disk: {
+        current: `${(resources.resources.disk_bytes / 1024 / 1024).toFixed(2)} MB`,
+        limit: `${(resources.resources.disk_limit_bytes / 1024 / 1024).toFixed(2)} MB`,
+      },
+      network: {
+        incoming: `${(resources.resources.network_rx_bytes / 1024 / 1024).toFixed(2)} MB`,
+        outgoing: `${(resources.resources.network_tx_bytes / 1024 / 1024).toFixed(2)} MB`,
+      },
+      uptime: resources.resources.uptime 
+        ? `${Math.floor(resources.resources.uptime / 1000)} seconds` 
+        : 'N/A',
     };
-  } catch (err) {
-    console.error(`Error fetching server ${serverId}:`, err.message);
-    return { name: `Server ${serverId}`, error: true, message: err.message };
+  } catch (error) {
+    console.error('Error fetching server status:', error.response?.data || error.message);
+    return {
+      error: true,
+      message: error.response?.data?.errors?.[0]?.detail || error.message,
+    };
   }
 }
 
 async function updateEmbed(message) {
   try {
-    const stats1 = await getServerStats(SERVER_ID_1);
-    const stats2 = await getServerStats(SERVER_ID_2);
+    // Fetch status for both servers
+    const server1Status = await getServerStatus(SERVER_ID_1);
+    const server2Status = await getServerStatus(SERVER_ID_2);
 
     const embed = new EmbedBuilder()
       .setTitle('🖥️ Server Status')
@@ -66,51 +70,32 @@ async function updateEmbed(message) {
       .setTimestamp(new Date())
       .setFooter({ text: `Updates every ${UPDATE_INTERVAL}s` });
 
-    [stats1, stats2].forEach((stat, i) => {
-      if (stat.error) {
+    // Process each server's status
+    [server1Status, server2Status].forEach((serverStatus, index) => {
+      if (serverStatus.error) {
+        // Handle error case
         embed.addFields({
-          name: `Server ${i + 1}`,
-          value: `❌ Error: ${stat.message}`,
+          name: `Server ${index + 1}`,
+          value: `❌ Error: ${serverStatus.message}`,
         });
       } else {
+        // Create detailed status field
         embed.addFields({
-          name: `${stat.name} (${stat.state.toUpperCase()})`,
-          value:
-            `CPU: ${stat.cpu}%\n` +
-            `Memory: ${stat.memory}\n` +
-            `Disk: ${stat.disk}\n` +
-            `Uptime: ${stat.uptime}`,
-          inline: false,
+          name: `${serverStatus.name} - ${serverStatus.status}`,
+          value: 
+            `🖳 CPU Usage: ${serverStatus.cpu.usage}\n` +
+            `💾 Memory: ${serverStatus.memory.current} / ${serverStatus.memory.limit}\n` +
+            `💽 Disk: ${serverStatus.disk.current} / ${serverStatus.disk.limit}\n` +
+            `🌐 Network (RX/TX): ${serverStatus.network.incoming} / ${serverStatus.network.outgoing}\n` +
+            `⏱️ Uptime: ${serverStatus.uptime}`,
+          inline: false
         });
       }
     });
 
+    // Edit the existing message with new embed
     await message.edit({ embeds: [embed] });
   } catch (error) {
     console.error('Error updating embed:', error);
   }
 }
-
-client.once('ready', async () => {
-  console.log(`Logged in as ${client.user.tag}!`);
-  try {
-    const channel = await client.channels.fetch(DISCORD_CHANNEL_ID);
-    if (!channel) {
-      console.error('Could not find the specified channel');
-      return;
-    }
-    
-    const sent = await channel.send({ content: 'Starting server monitor...' });
-    setInterval(() => updateEmbed(sent), UPDATE_INTERVAL * 1000);
-  } catch (error) {
-    console.error('Error in ready event:', error);
-  }
-});
-
-client.on('error', (error) => {
-  console.error('Discord client error:', error);
-});
-
-client.login(DISCORD_TOKEN).catch(error => {
-  console.error('Login error:', error);
-});
