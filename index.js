@@ -1,3 +1,54 @@
+// index.js
+// Load environment variables early
+require('dotenv').config({ path: '.env' });
+
+const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const axios = require('axios');
+const http = require('http');
+
+// Validate environment variables
+const requiredEnvVars = [
+  'DISCORD_TOKEN',
+  'DISCORD_CHANNEL_ID',
+  'PTERO_API_KEY',
+  'PTERO_PANEL_URL',
+  'SERVER_ID_1',
+  'SERVER_ID_2',
+  'UPDATE_INTERVAL'
+];
+
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+  console.error('Missing required environment variables:', missingEnvVars);
+  process.exit(1);
+}
+
+// Destructure environment variables with fallback defaults
+const {
+  DISCORD_TOKEN,
+  DISCORD_CHANNEL_ID,
+  PTERO_API_KEY,
+  PTERO_PANEL_URL,
+  SERVER_ID_1,
+  SERVER_ID_2,
+  UPDATE_INTERVAL = '60'
+} = process.env;
+
+// Create a simple HTTP server to handle Render's health checks
+const PORT = process.env.PORT || 3000;
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Discord Bot is running!');
+});
+
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
 // Configuration for Pterodactyl Client API
 const PTERO_CLIENT_API_HEADERS = {
   'Authorization': `Bearer ${PTERO_API_KEY}`,
@@ -99,3 +150,27 @@ async function updateEmbed(message) {
     console.error('Error updating embed:', error);
   }
 }
+
+client.once('ready', async () => {
+  console.log(`Logged in as ${client.user.tag}!`);
+  try {
+    const channel = await client.channels.fetch(DISCORD_CHANNEL_ID);
+    if (!channel) {
+      console.error('Could not find the specified channel');
+      return;
+    }
+    
+    const sent = await channel.send({ content: 'Starting server monitor...' });
+    setInterval(() => updateEmbed(sent), parseInt(UPDATE_INTERVAL) * 1000);
+  } catch (error) {
+    console.error('Error in ready event:', error);
+  }
+});
+
+client.on('error', (error) => {
+  console.error('Discord client error:', error);
+});
+
+client.login(DISCORD_TOKEN).catch(error => {
+  console.error('Login error:', error);
+});
