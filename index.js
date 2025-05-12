@@ -130,7 +130,7 @@ async function updateEmbed(message1, message2) {
       const statusEmoji = serverStatus.status === 'Online' ? '🟢' : '🔴';
       return new EmbedBuilder()
         .setDescription(
-          `${statusEmoji} ${serverStatus.name} (${serverStatus.status})\n` +
+        //  `${statusEmoji} ${serverStatus.name} (${serverStatus.status})\n` +
           `🖳 CPU: ${serverStatus.cpu.usage}\n\n` +
           `💾 Memory: ${serverStatus.memory.current} / ${serverStatus.memory.limit}\n\n` +
           `💽 Disk: ${serverStatus.disk.current} / ${serverStatus.disk.limit}\n\n` +
@@ -168,8 +168,8 @@ client.once('ready', async () => {
       return;
     }
 
-    const msg1 = await channel.send({ content: 'Loading Server 1...' });
-    const msg2 = await channel.send({ content: 'Loading Server 2...' });
+    const msg1 = await channel.send({ content: ${statusEmoji} ${serverStatus.name} (${serverStatus.status}) });
+    const msg2 = await channel.send({ content: ${statusEmoji} ${serverStatus.name} (${serverStatus.status}) });
 
     // Update every X seconds
     setInterval(() => updateEmbed(msg1, msg2), parseInt(UPDATE_INTERVAL) * 1000);
