@@ -2,6 +2,7 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
+const express = require('express');
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
@@ -80,3 +81,15 @@ client.once('ready', async () => {
 });
 
 client.login(DISCORD_TOKEN);
+
+// Web server for Render
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (_req, res) => {
+  res.send('Pterodactyl Discord Bot is running.');
+});
+
+app.listen(PORT, () => {
+  console.log(`Web server running on port ${PORT}`);
+});
