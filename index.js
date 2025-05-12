@@ -171,10 +171,12 @@ async function updateEmbed(message) {
           name: `${statusEmoji} ${serverStatus.name} (${serverStatus.status})`,
           value: 
             `🖳 CPU: \n${serverStatus.cpu.usage}\n` +
-            `💾 Memory: \n${serverStatus.memory.current} / ${serverStatus.memory.limit}\n` +
-            `💽 Disk: \n${serverStatus.disk.current} / ${serverStatus.disk.limit}\n` +
-            `🌐 Network: \n⬇️ ${serverStatus.network.incoming} | ⬆️ ${serverStatus.network.outgoing}\n` + 
-            `⏱️ Uptime: \n${formatUptime(parseInt(serverStatus.uptime.replace(/\D/g, '')))}`,
+            `\n💾 Memory: \n${serverStatus.memory.current} / ${serverStatus.memory.limit}\n` +
+            `\n💽 Disk: \n${serverStatus.disk.current} / ${serverStatus.disk.limit}\n` +
+            `\n🌐 Network: \n⬇️ ${serverStatus.network.incoming} | ⬆️ ${serverStatus.network.outgoing}\n` + 
+            `\n⏱️ Uptime: \n${formatUptime(parseInt(serverStatus.uptime.replace(/\D/g, '')))}` +
+             '\n' +
+             '\n',
           inline: false
         });
       }
