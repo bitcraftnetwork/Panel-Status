@@ -174,8 +174,7 @@ async function updateEmbed(message) {
             `💾 Memory: \n${serverStatus.memory.current} / ${serverStatus.memory.limit}\n` +
             `💽 Disk: \n${serverStatus.disk.current} / ${serverStatus.disk.limit}\n` +
             `🌐 Network: \n⬇️ ${serverStatus.network.incoming} | ⬆️ ${serverStatus.network.outgoing}\n` + 
-            `⏱️ Uptime: \n${formatUptime(parseInt(serverStatus.uptime.replace(/\D/g, '')))}`
-            (index === 0 ? '\u200B' : ''),
+            `⏱️ Uptime: \n${formatUptime(parseInt(serverStatus.uptime.replace(/\D/g, '')))}`,
           inline: false
         });
       }
