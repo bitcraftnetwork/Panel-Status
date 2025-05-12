@@ -29,30 +29,27 @@ async function updateEmbed(message) {
       return formattedUptime;
     };
 
-    // Handle server 1
-    embed.addFields({
-      name: `🔹 ${server1Status.name} (${server1Status.status === 'Online' ? '🟢 Online' : '🔴 Offline'})`,
-      value: server1Status.error
-        ? `❌ Error: ${server1Status.message}`
-        : `🖳 CPU:\n${server1Status.cpu.usage}\n` +
-          `💾 Memory:\n${server1Status.memory.current} / ${server1Status.memory.limit}\n` +
-          `💽 Disk:\n${server1Status.disk.current} / ${server1Status.disk.limit}\n` +
-          `🌐 Network:\n⬇️ ${server1Status.network.incoming} | ⬆️ ${server1Status.network.outgoing}\n` +
-          `⏱️ Uptime:\n${formatUptime(parseInt(server1Status.uptime.replace(/\D/g, '')))}\n\u200B`,
-      inline: false,
-    });
+    [server1Status, server2Status].forEach((serverStatus, index) => {
+      if (serverStatus.error) {
+        embed.addFields({
+          name: `Server ${index + 1}`,
+          value: `❌ Error: ${serverStatus.message}`,
+        });
+      } else {
+        const statusEmoji = serverStatus.status === 'Online' ? '🟢' : '🔴';
 
-    // Handle server 2
-    embed.addFields({
-      name: `🔹 ${server2Status.name} (${server2Status.status === 'Online' ? '🟢 Online' : '🔴 Offline'})`,
-      value: server2Status.error
-        ? `❌ Error: ${server2Status.message}`
-        : `🖳 CPU:\n${server2Status.cpu.usage}\n` +
-          `💾 Memory:\n${server2Status.memory.current} / ${server2Status.memory.limit}\n` +
-          `💽 Disk:\n${server2Status.disk.current} / ${server2Status.disk.limit}\n` +
-          `🌐 Network:\n⬇️ ${server2Status.network.incoming} | ⬆️ ${server2Status.network.outgoing}\n` +
-          `⏱️ Uptime:\n${formatUptime(parseInt(server2Status.uptime.replace(/\D/g, '')))}\n`,
-      inline: false,
+        embed.addFields({
+          name: `${statusEmoji} ${serverStatus.name} (${serverStatus.status})`,
+          value:
+            `🖳 CPU:\n${serverStatus.cpu.usage}\n` +
+            `💾 Memory:\n${serverStatus.memory.current} / ${serverStatus.memory.limit}\n` +
+            `💽 Disk:\n${serverStatus.disk.current} / ${serverStatus.disk.limit}\n` +
+            `🌐 Network:\n⬇️ ${serverStatus.network.incoming} | ⬆️ ${serverStatus.network.outgoing}\n` +
+            `⏱️ Uptime:\n${formatUptime(parseInt(serverStatus.uptime.replace(/\D/g, '')))}\n` +
+            (index === 0 ? '\u200B' : ''), // adds a line break after first server
+          inline: false
+        });
+      }
     });
 
     await message.edit({ embeds: [embed] });
