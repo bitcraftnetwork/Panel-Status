@@ -130,7 +130,6 @@ async function updateEmbed(message1, message2) {
       const statusEmoji = serverStatus.status === 'Online' ? '🟢' : '🔴';
       return new EmbedBuilder()
         .setDescription(
-        //  `${statusEmoji} ${serverStatus.name} (${serverStatus.status})\n` +
           `🖳 CPU: ${serverStatus.cpu.usage}\n\n` +
           `💾 Memory: ${serverStatus.memory.current} / ${serverStatus.memory.limit}\n\n` +
           `💽 Disk: ${serverStatus.disk.current} / ${serverStatus.disk.limit}\n\n` +
@@ -146,12 +145,20 @@ async function updateEmbed(message1, message2) {
 
     if (!server1Status.error) {
       const embed1 = buildEmbed(server1Status);
-      await message1.edit({ embeds: [embed1] });
+      const statusEmoji1 = server1Status.status === 'Online' ? '🟢' : '🔴';
+      await message1.edit({
+        content: `${statusEmoji1} ${server1Status.name} (${server1Status.status})`,
+        embeds: [embed1]
+      });
     }
 
     if (!server2Status.error) {
       const embed2 = buildEmbed(server2Status);
-      await message2.edit({ embeds: [embed2] });
+      const statusEmoji2 = server2Status.status === 'Online' ? '🟢' : '🔴';
+      await message2.edit({
+        content: `${statusEmoji2} ${server2Status.name} (${server2Status.status})`,
+        embeds: [embed2]
+      });
     }
 
   } catch (error) {
@@ -168,8 +175,19 @@ client.once('ready', async () => {
       return;
     }
 
-    const msg1 = await channel.send({ content: '${statusEmoji} ${server1Status.name} (${server1Status.status})' });
-    const msg2 = await channel.send({ content: '${statusEmoji} ${server1Status.name} (${server1Status.status})' });
+    const server1Status = await getServerStatus(SERVER_ID_1);
+    const server2Status = await getServerStatus(SERVER_ID_2);
+
+    const statusEmoji1 = server1Status.status === 'Online' ? '🟢' : '🔴';
+    const statusEmoji2 = server2Status.status === 'Online' ? '🟢' : '🔴';
+
+    const msg1 = await channel.send({
+      content: `${statusEmoji1} ${server1Status.name} (${server1Status.status})`
+    });
+
+    const msg2 = await channel.send({
+      content: `${statusEmoji2} ${server2Status.name} (${server2Status.status})`
+    });
 
     // Update every X seconds
     setInterval(() => updateEmbed(msg1, msg2), parseInt(UPDATE_INTERVAL) * 1000);
