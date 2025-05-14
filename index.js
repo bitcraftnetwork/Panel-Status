@@ -137,7 +137,7 @@ async function updateEmbed(message1, message2) {
           `⏱️ Uptime: ${formatUptime(parseInt(serverStatus.uptime.replace(/\D/g, '')))}`
         )
         .setColor(serverStatus.status === 'Online' ? 0x00ff00 : 0xff0000)
-        .setFooter({ text: `Updates every ${UPDATE_INTERVAL}s` })
+        .setFooter({ text: `Updates in <:countdown:>` })
         .setTimestamp(new Date());
     };
 
