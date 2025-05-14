@@ -29,7 +29,7 @@ const {
   PTERO_PANEL_URL,
   SERVER_ID_1,
   SERVER_ID_2,
-  UPDATE_INTERVAL = '60'
+  UPDATE_INTERVAL = '10'
 } = process.env;
 
 const PORT = process.env.PORT || 3000;
