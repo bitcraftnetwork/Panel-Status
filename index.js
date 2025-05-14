@@ -134,10 +134,11 @@ async function updateEmbed(message1, message2) {
           `💾 Memory: ${serverStatus.memory.current} / ${serverStatus.memory.limit}\n\n` +
           `💽 Disk: ${serverStatus.disk.current} / ${serverStatus.disk.limit}\n\n` +
           `🌐 Network: ⬇️ ${serverStatus.network.incoming} | ⬆️ ${serverStatus.network.outgoing}\n\n` +
-          `⏱️ Uptime: ${formatUptime(parseInt(serverStatus.uptime.replace(/\D/g, '')))}`
+          `⏱️ Uptime: ${formatUptime(parseInt(serverStatus.uptime.replace(/\D/g, '')))}`\n\n` +
+          `🔄 Updates in <a:countdown:1372235551087792148>`
         )
         .setColor(serverStatus.status === 'Online' ? 0x00ff00 : 0xff0000)
-        .setDescription({ text: `Updates in <a:countdown:1372235551087792148>` })
+        .setFooter({ text: `By BitcraftNetwork` })
         .setTimestamp(new Date());
     };
 
